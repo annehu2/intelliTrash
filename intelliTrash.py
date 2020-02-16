@@ -7,6 +7,7 @@ from google.cloud import vision
 os.environ['GOOGLE_APPLICATION_CREDENTIALS']='/home/pi/makeuoft/MakeUofT-e3c98ff21819.json'
 client = vision.ImageAnnotatorClient()
 
+GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(7, GPIO.OUT)
 GPIO.setup(13, GPIO.OUT)
@@ -19,6 +20,13 @@ recyclable = ["paper", "can", "bottle", "cardboard", "carton", "boxes", "drink"]
 compostable = ["vegetable", "fruit", "plant", "natural foods", "produce"]
 
 trashCount = [0, 0]
+
+GPIO.setup(10, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
+def reset():
+    trashCount[0] = 0
+    trashCount[1] = 0
+
 def sortTrash(trashLabel):
     if (trashLabel.score > 0.8):
         print(trashLabel.description)
@@ -67,14 +75,13 @@ def outcome():
         print("put it in garbage")
         letsGarbage()
 
-    p.stop()
-    GPIO.cleanup()  
+camera = picamera.PiCamera()
 
 def takephoto():
-    camera = picamera.PiCamera()
+    camera.start_preview()
     camera.capture('trash.jpg')
 
-def main():
+def startTrash():
     takephoto()
     """Run a label request on a single image"""
 
@@ -92,7 +99,23 @@ def main():
         sortTrash(d)
 
     outcome()
-    
+
+def button_callback(channel):
+     print("starting camera")
+     reset()
+     startTrash()
+
+GPIO.add_event_detect(10,GPIO.RISING,callback=button_callback)
+
+def main():
+    while True:
+        try:
+        # do any other processing, while waiting for the edge detection
+            time.sleep(100) # sleep 1 sec
+        finally:
+            p.stop()
+            p1.stop()
+            GPIO.cleanup()  
 
 if __name__ == '__main__':
     main()
