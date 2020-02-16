@@ -7,21 +7,18 @@ from google.cloud import vision
 os.environ['GOOGLE_APPLICATION_CREDENTIALS']='/home/pi/makeuoft/MakeUofT-e3c98ff21819.json'
 client = vision.ImageAnnotatorClient()
 
-# GPIO.setmode(GPIO.BOARD)
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(7, GPIO.OUT)
+p = GPIO.PWM(7, 50)
+p.start(7)
 
-# # set up GPIO pins
-# GPIO.setup(7, GPIO.OUT) # Connected to PWMA
-# GPIO.setup(11, GPIO.OUT) # Connected to AIN2
-# GPIO.setup(12, GPIO.OUT) # Connected to AIN1
-# GPIO.setup(13, GPIO.OUT) # Connected to STBY
-
-recyclable = ["paper", "can", "bottle", "cardboard", "carton", "boxes"]
+recyclable = ["paper", "can", "bottle", "cardboard", "carton", "boxes", "drink"]
 compostable = ["vegetable", "fruit", "plant", "natural foods", "produce"]
 
 trashCount = [0, 0]
 def sortTrash(trashLabel):
-    print(trashLabel.description)
     if (trashLabel.score > 0.8):
+        print(trashLabel.description)
         for r in recyclable:
             if (r in trashLabel.description.lower()):
                 trashCount[1] += 1
@@ -33,10 +30,25 @@ def sortTrash(trashLabel):
 def outcome():
     if (trashCount[0] > 0):
         print("put it in compost!")
+        p.ChangeDutyCycle(2.2)
+        time.sleep(2)
+        p.ChangeDutyCycle(6)
+        time.sleep(1)
     elif (trashCount[1] > 0):
         print("put it in recycling")
+        p.ChangeDutyCycle(2.2)
+        time.sleep(2)
+        p.ChangeDutyCycle(6)
+        time.sleep(1)
     else:
         print("put it in garbage")
+        p.ChangeDutyCycle(9.8)
+        time.sleep(2)
+        p.ChangeDutyCycle(6)
+        time.sleep(1)
+
+    p.stop()
+    GPIO.cleanup()  
 
 def takephoto():
     camera = picamera.PiCamera()
@@ -60,19 +72,6 @@ def main():
         sortTrash(d)
 
     outcome()
-
-        #     # Drive the motor clockwise
-        #     GPIO.output(12, GPIO.HIGH) # Set AIN1
-        #     GPIO.output(11, GPIO.LOW) # Set AIN2
-
-        #     # Set the motor speed
-        #     GPIO.output(7, GPIO.HIGH) # Set PWMA
-
-        #     # Disable STBY (standby)
-        #     GPIO.output(13, GPIO.HIGH)
-
-        #     # Wait 5 seconds
-        #     time.sleep(5)
     
 
 if __name__ == '__main__':
