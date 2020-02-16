@@ -9,8 +9,11 @@ client = vision.ImageAnnotatorClient()
 
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(7, GPIO.OUT)
+GPIO.setup(13, GPIO.OUT)
 p = GPIO.PWM(7, 50)
-p.start(7)
+p1 = GPIO.PWM(13, 50)
+p.start(6)
+p1.start(7)
 
 recyclable = ["paper", "can", "bottle", "cardboard", "carton", "boxes", "drink"]
 compostable = ["vegetable", "fruit", "plant", "natural foods", "produce"]
@@ -27,25 +30,42 @@ def sortTrash(trashLabel):
             if (c in trashLabel.description.lower()):
                 trashCount[0] += 1
 
+def letsRecycle():
+    p.ChangeDutyCycle(2.2)
+    time.sleep(2)
+    p.ChangeDutyCycle(6)
+    time.sleep(1)
+    p1.ChangeDutyCycle(3)
+    time.sleep(2)
+    p1.ChangeDutyCycle(7)
+    time.sleep(1)
+
+def letsCompost():
+    p.ChangeDutyCycle(2.2)
+    time.sleep(2)
+    p.ChangeDutyCycle(6)
+    time.sleep(1)
+    p1.ChangeDutyCycle(11)
+    time.sleep(2)
+    p1.ChangeDutyCycle(7)
+    time.sleep(1)
+
+def letsGarbage():
+    p.ChangeDutyCycle(9.8)
+    time.sleep(2)
+    p.ChangeDutyCycle(6)
+    time.sleep(1)
+
 def outcome():
     if (trashCount[0] > 0):
         print("put it in compost!")
-        p.ChangeDutyCycle(2.2)
-        time.sleep(2)
-        p.ChangeDutyCycle(6)
-        time.sleep(1)
+        letsCompost()
     elif (trashCount[1] > 0):
         print("put it in recycling")
-        p.ChangeDutyCycle(2.2)
-        time.sleep(2)
-        p.ChangeDutyCycle(6)
-        time.sleep(1)
+        letsRecycle()
     else:
         print("put it in garbage")
-        p.ChangeDutyCycle(9.8)
-        time.sleep(2)
-        p.ChangeDutyCycle(6)
-        time.sleep(1)
+        letsGarbage()
 
     p.stop()
     GPIO.cleanup()  
